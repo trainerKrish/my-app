@@ -1,5 +1,6 @@
 from flask import render_template, Flask, request
 from bmi import bmi
+from emi import get_emi
 
 app = Flask(__name__)
 
@@ -24,7 +25,16 @@ def bmi_calc():
         return render_template("bmi.html", res=round(res, 2))
 
 
-    
+@app.route('/calc/wealth/emi', methods=['post', 'get'])
+def emi_calc():
+    if request.method == 'GET':
+        return render_template("emi.html")
+    elif request.method == 'POST':
+        principal = float(request.form['principal'])
+        rate_of_interest = float(request.form['rate_of_interest'])
+        no_of_years = int(request.form['no_of_years'])
+        emi, comp = get_emi(principal, no_of_years, rate_of_interest)
+        return render_template("emi.html", emi=emi, comp=comp)
 
 
 if __name__ == '__main__':
