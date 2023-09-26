@@ -6,3 +6,10 @@ jobs:
     steps:
       - run: echo "hello"
       - run: echo "second line"
+
+  deploy:
+    needs: demo
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "hello"
+      - run: echo "second line"
