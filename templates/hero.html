@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>DC Heroes</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.0/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body style="background-color: #f8f9fa">
+    <div class="container mt-5">
+      <h1 class="text-center">DC Heroes</h1>
+
+      <!-- Form to add new Hero -->
+      <form id="add-hero-form" class="mb-4">
+        <div class="mb-3">
+          <input
+            type="text"
+            class="form-control"
+            id="name"
+            placeholder="Name"
+          />
+        </div>
+        <div class="mb-3">
+          <input
+            type="text"
+            class="form-control"
+            id="alias"
+            placeholder="Alias"
+          />
+        </div>
+        <div class="mb-3">
+          <input
+            type="text"
+            class="form-control"
+            id="city"
+            placeholder="City"
+          />
+        </div>
+        <div class="mb-3">
+          <input
+            type="text"
+            class="form-control"
+            id="powers"
+            placeholder="Powers"
+          />
+        </div>
+        <div class="mb-3">
+          <select class="form-select" id="team">
+            <option value="" disabled selected>Select Team</option>
+            <!-- Add your teams here -->
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Hero</button>
+      </form>
+
+      <!-- Table to display Heroes -->
+      <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+          <tr>
+            <th>Name</th>
+            <th>Alias</th>
+            <th>City</th>
+            <th>Powers</th>
+            <th>Team</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="heroes-table-body">
+          <!-- Rows will be added here -->
+        </tbody>
+      </table>
+    </div>
+
+    <script>
+      const teams = [
+        "Justice League",
+        "Suicide Squad",
+        "Teen Titans",
+        "Justice Society",
+        "Outsiders",
+        "Birds of Prey",
+      ];
+      function populateTeamDropdown() {
+        const teamSelect = $("#team");
+        teams.forEach((team) => {
+          teamSelect.append(`<option value="${team}">${team}</option>`);
+        });
+      }
+      populateTeamDropdown();
+
+      // Load all heroes
+      function loadHeroes() {
+        $.get("https://dc-heros.vercel.app/heroes/", function (data) {
+          $("#heroes-table-body").empty();
+          data.forEach(function (hero) {
+            const row = `
+            <tr>
+              <td class="name-cell">${hero[0]}</td>
+              <td class="alias-cell">${hero[1]}</td>
+              <td class="city-cell">${hero[2]}</td>
+              <td class="powers-cell">${hero[3]}</td>
+              <td class="team-cell">${hero[4]}</td>
+              <td>
+                <button class="btn btn-warning btn-edit"><i class="bi bi-pencil-square"></i></button>
+                <button class="btn btn-danger btn-delete"><i class="bi bi-trash"></i></button>
+              </td>
+            </tr>`;
+            $("#heroes-table-body").append(row);
+          });
+        });
+      }
+
+      // Add a new hero
+      $("#add-hero-form").submit(function (event) {
+        event.preventDefault();
+        const newHero = {
+          name: $("#name").val(),
+          alias: $("#alias").val(),
+          city: $("#city").val(),
+          powers: $("#powers").val(),
+          team: $("#team").val(),
+        };
+        $.ajax({
+          url: "https://dc-heros.vercel.app/hero/",
+          type: "POST",
+          data: JSON.stringify(newHero),
+          contentType: "application/json",
+          success: function (response) {
+            // Reload or update the table data here
+            loadHeroes();
+          },
+        });
+      });
+
+      // Enable edit mode
+      $("#heroes-table-body").on("click", ".btn-edit", function () {
+        const row = $(this).closest("tr");
+        const name = row.find(".name-cell").text();
+        const alias = row.find(".alias-cell").text();
+        const city = row.find(".city-cell").text();
+        const powers = row.find(".powers-cell").text();
+        const team = row.find(".team-cell").text();
+
+        let teamOptions = teams
+          .map(
+            (t) =>
+              `<option value="${t}" ${
+                t === team ? "selected" : ""
+              }>${t}</option>`
+          )
+          .join("");
+        let teamSelect = `<select class="form-control">${teamOptions}</select>`;
+        row
+          .find(".name-cell")
+          .html(`<input type="text" class="form-control" value="${name}">`);
+        row
+          .find(".alias-cell")
+          .html(`<input type="text" class="form-control" value="${alias}">`);
+        row
+          .find(".city-cell")
+          .html(`<input type="text" class="form-control" value="${city}">`);
+        row
+          .find(".powers-cell")
+          .html(`<input type="text" class="form-control" value="${powers}">`);
+        row.find(".team-cell").html(`${teamSelect}`);
+        $(this)
+          .removeClass("btn-warning btn-edit")
+          .addClass("btn-success btn-submit");
+        $(this).html('<i class="bi bi-check-lg"></i>');
+      });
+
+      // Update a hero
+      $("#heroes-table-body").on("click", ".btn-submit", function () {
+        const row = $(this).closest("tr");
+        const updatedHero = {
+          name: row.find(".name-cell input").val(),
+          alias: row.find(".alias-cell input").val(),
+          city: row.find(".city-cell input").val(),
+          powers: row.find(".powers-cell input").val(),
+          team: row.find(".team-cell select").val(),
+        };
+        console.log(updatedHero);
+        $.ajax({
+          url: `https://dc-heros.vercel.app/hero/${updatedHero.name}`,
+          type: "PUT",
+          data: JSON.stringify(updatedHero),
+          contentType: "application/json",
+          success: function (result) {
+            loadHeroes();
+          },
+        });
+
+        row.find(".name-cell").html(updatedHero.name);
+        row.find(".alias-cell").html(updatedHero.alias);
+        row.find(".city-cell").html(updatedHero.city);
+        row.find(".powers-cell").html(updatedHero.powers);
+        row.find(".team-cell").html(updatedHero.team);
+        $(this)
+          .removeClass("btn-success btn-submit")
+          .addClass("btn-warning btn-edit");
+        $(this).html('<i class="bi bi-pencil-square"></i>');
+      });
+
+      // Delete a hero
+      $("#heroes-table-body").on("click", ".btn-delete", function () {
+        const row = $(this).closest("tr");
+        const heroName = row.find(".name-cell").text();
+        console.log(heroName);
+        if (heroName === undefined || heroName === "") {
+          alert("Hero name is undefined.");
+          return;
+        }
+        $.ajax({
+          url: `https://dc-heros.vercel.app/hero/${heroName}`,
+          type: "DELETE",
+          success: function (result) {
+            row.remove();
+          },
+          error: function (err) {
+            // Handle error
+            console.error("Error deleting hero:", err);
+          },
+        });
+      });
+
+      // Initial load
+      loadHeroes();
+    </script>
+  </body>
+</html>
