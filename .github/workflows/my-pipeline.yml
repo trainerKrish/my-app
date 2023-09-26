@@ -1,0 +1,8 @@
+name: "My-workflow"
+on: push
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "hello"
+      - run: echo "second line"
