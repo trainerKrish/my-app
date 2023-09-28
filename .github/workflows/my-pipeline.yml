@@ -6,8 +6,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         name: "Cloning"
-      - run: ls -l
-        name: "checking the file system with clone"
+      - run: python3 --version
+      - name: "install packages"
+        run: |
+          python3 -m pip install --upgrade pip
+          pip3 install -r requirements.txt
+      - name: "Testing with Pytest"
+        run: pytest
 
   deploy:
     needs: demo
