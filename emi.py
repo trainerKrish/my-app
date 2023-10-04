@@ -1,5 +1,5 @@
-def get_emi(p,n,r):
-    """E = p x r x (1+r)^n/((1+r)^n - 1, where 
+def get_emi(p, n, r):
+    """E = p x r x (1+r)^n/((1+r)^n - 1, where
 
     E = Equated Monthly Instalment
     p stands for principal amount
@@ -21,9 +21,9 @@ def get_emi(p,n,r):
 
         components.append(
             (
-                month, 
-                round(prin_component), 
-                round(int_component), 
+                month,
+                round(prin_component),
+                round(int_component),
                 round(outstanding_principal)
             )
         )
@@ -37,6 +37,3 @@ if __name__ == '__main__':
     rate_of_interest = 7.2
 
     get_emi(principal, no_of_year, rate_of_interest)
-
-
-

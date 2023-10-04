@@ -10,4 +10,4 @@ def bmi(weight: float, height: float):
 
 if __name__ == '__main__':
     bmi_value = bmi(150, 70)
-    print("BMI Value is:",bmi_value)
+    print("BMI Value is:", bmi_value)
