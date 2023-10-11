@@ -4,7 +4,7 @@ on:
     branches:
       - "main"
 env:
-  AWS_REGION: aws-region
+  AWS_REGION: us-east-1
 
 jobs:
   test:
@@ -42,10 +42,22 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - run: echo "hello"
-        name: This is just an echo command
-      - run: ls -l
-        name: "checking the file system without clone"
+      - uses: actions/checkout@v4
+        name: "Download Repo"
+
+      - name: Configuring AWS
+        id: aws_info
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: get account id
+        run: echo "${{ steps.aws_info.outputs.aws-account-id }}"
+
+      - name: list-cluster
+        run: aws ecs list-clusters
 
   deploy:
     needs: [test, build]
