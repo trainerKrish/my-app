@@ -29,10 +29,14 @@ jobs:
           pip install pytest==7.4.2 flake8==6.0.0
 
       - name: "Static testing with Flake8"
-        run: flake8
+        run: |
+          source venv/bin/activate
+          flake8
 
       - name: "Functionality Testing with Pytest"
-        run: pytest
+        run: |
+          source venv/bin/activate
+          pytest
 
   build:
     needs: test
