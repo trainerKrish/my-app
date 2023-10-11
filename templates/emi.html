@@ -1,88 +1,74 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EMI Calculator</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9"
-      crossorigin="anonymous"
-    />
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
-      crossorigin="anonymous"
-    ></script>
-  </head>
-  <body>
-    <div class="container">
-      <form action="" method="post" class="row g-3">
-        <div class="col-10">
-          <label for="principal" class="form-label">Principal Amount</label>
-          <input
-            type="number"
-            class="form-control"
-            name="principal"
-            id="principal"
-            placeholder="How much principal you need?"
-          />
-        </div>
-        <div class="col-10">
-          <label for="rate_of_interest" class="form-label"
-            >Pricipal Amount</label
-          >
-          <input
-            type="number"
-            class="form-control"
-            name="rate_of_interest"
-            placeholder="Rate of Interest from bank"
-            id="rate_of_interest"
-          />
-        </div>
-        <div class="col-10">
-          <label for="no_of_years" class="form-label">Pricipal Amount</label>
-          <input
-            type="number"
-            class="form-control"
-            name="no_of_years"
-            placeholder="Duration in years"
-            id="no_of_years"
-          />
-        </div>
-        <div class="col-12">
-          <input type="submit" class="btn btn-primary" value="Submit" />
-        </div>
-      </form>
+{% extends 'base.html' %} <br />
+{% block title %}EMI Calculator{% endblock %} <br />
+{% block content %}
 
-      {% if emi %}
-      <div>Your Monthly EMI will be <b>${{ emi }}</b></div>
-
-      <table
-        class="table table-striped-columns table-bordered table-primary table-hover"
-      >
-        <thead>
-          <tr>
-            <th>Month</th>
-            <th>Principal</th>
-            <th>Interest</th>
-            <th>Pending Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for month, principal, interest, pending in comp %}
-          <tr>
-            <td>{{ month }}</td>
-            <td>{{ principal }}</td>
-            <td>{{ interest }}</td>
-            <td>{{ pending }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-
-      {% endif %}
+<div class="container border border-warning card bg-info">
+  <form action="" method="post" class="row g-3">
+    <center>
+      <h1 class="my-4">EMI Calculator</h1>
+    </center>
+    <div class="col-10 offset-1">
+      <label for="principal" class="form-label">Principal Amount</label>
+      <input
+        type="number"
+        class="form-control"
+        name="principal"
+        id="principal"
+        placeholder="How much principal you need?"
+      />
     </div>
-  </body>
-</html>
+    <div class="col-10 offset-1">
+      <label for="rate_of_interest" class="form-label">Pricipal Amount</label>
+      <input
+        type="number"
+        class="form-control"
+        name="rate_of_interest"
+        placeholder="Rate of Interest from bank"
+        id="rate_of_interest"
+      />
+    </div>
+    <div class="col-10 offset-1">
+      <label for="no_of_years" class="form-label">Pricipal Amount</label>
+      <input
+        type="number"
+        class="form-control"
+        name="no_of_years"
+        placeholder="Duration in years"
+        id="no_of_years"
+      />
+    </div>
+    <div class="col-2 offset-5 mt-5">
+      <input type="submit" class="btn btn-primary" value="Submit" />
+    </div>
+  </form>
+
+  {% if emi %}
+  <div>Your Monthly EMI will be <b>${{ emi }}</b></div>
+
+  <table
+    class="table table-striped-columns table-bordered table-primary table-hover"
+  >
+    <thead>
+      <tr style="text-align: center">
+        <th>Month</th>
+        <th>Principal</th>
+        <th>Interest</th>
+        <th>Pending Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for month, principal, interest, pending in comp %}
+      <tr style="text-align: center">
+        <td>{{ month }}</td>
+        <td>{{ principal }}</td>
+        <td>{{ interest }}</td>
+        <td>{{ pending }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% endif %}
+  <br />
+</div>
+{% endblock %}
