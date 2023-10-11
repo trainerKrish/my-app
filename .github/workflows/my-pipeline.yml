@@ -1,50 +1,65 @@
 name: "My-workflow"
 on:
   pull_request:
-    types:
-      - opened
-      - closed
     branches:
       - "main"
-  workflow_dispatch:
-    inputs:
-      logLevel:
-        description: "Log level"
-        required: true
-        default: "warning"
-        type: choice
-        options:
-          - info
-          - warning
-          - debug
-      tags:
-        description: "Test scenario tags"
-        required: false
-        type: boolean
-      environment:
-        description: "Environment to run tests against"
-        type: environment
-        required: true
+env:
+  AWS_REGION: aws-region
 
 jobs:
-  demo:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         name: "Cloning"
-      - run: python3 --version
-      - name: "install packages"
+
+      - name: Caching the modules
+        id: modules
+        uses: actions/cache@v3
+        with:
+          path: venv
+          key: pip1-cache-${{ hashFiles('requirements.txt')}}
+
+      - name: Installing PIP
+        if: steps.modules.outputs.cache-hit != 'true'
         run: |
-          python3 -m pip install --upgrade pip
-          pip3 install -r requirements.txt
-      - name: "Testing with Pytest"
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          pip install pytest==7.4.2 flake8==6.0.0
+
+      - name: "Static testing with Flake8"
+        run: flake8
+
+      - name: "Functionality Testing with Pytest"
         run: pytest
 
-  deploy:
-    needs: demo
+  build:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - run: echo "hello"
         name: This is just an echo command
       - run: ls -l
         name: "checking the file system without clone"
+
+  deploy:
+    needs: [test, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        name: "Cloning"
+
+      - name: Configuring AWS
+        id: aws_info
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: get account id
+        run: echo "${{ steps.aws_info.outputs.aws-account-id }}"
+
+      - name: list-cluster
+        run: aws ecs list-clusters
