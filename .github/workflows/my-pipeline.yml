@@ -4,7 +4,10 @@ on:
     branches:
       - "main"
 env:
-  AWS_REGION: aws-region
+  AWS_REGION: us-east-1
+  ECR_REPO: bestapp
+  ECS_SERVICE: BestApp-Service
+  ECS_CLUSTER: BestClusterEver
 
 jobs:
   test:
@@ -29,26 +32,23 @@ jobs:
           pip install pytest==7.4.2 flake8==6.0.0
 
       - name: "Static testing with Flake8"
-        run: flake8
+        run: |
+          source venv/bin/activate
+          flake8 app.py bmi.py emi.py test_bmi.py
 
       - name: "Functionality Testing with Pytest"
-        run: pytest
+        run: |
+          source venv/bin/activate
+          pytest
 
   build:
     needs: test
     runs-on: ubuntu-latest
-    steps:
-      - run: echo "hello"
-        name: This is just an echo command
-      - run: ls -l
-        name: "checking the file system without clone"
-
-  deploy:
-    needs: [test, build]
-    runs-on: ubuntu-latest
+    outputs:
+      full_uri: ${{ steps.build-image.outputs.image }}
     steps:
       - uses: actions/checkout@v4
-        name: "Cloning"
+        name: "Download Repo"
 
       - name: Configuring AWS
         id: aws_info
@@ -58,8 +58,55 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: get account id
-        run: echo "${{ steps.aws_info.outputs.aws-account-id }}"
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-      - name: list-cluster
-        run: aws ecs list-clusters
+      - name: Build and Push Docker image
+        id: build-image
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $REGISTRY/$ECR_REPO:$IMAGE_TAG .
+          docker push $REGISTRY/$ECR_REPO:$IMAGE_TAG
+          echo "image=$REGISTRY/$ECR_REPO:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+  deploy:
+    needs: [test, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        name: "Download Repo"
+
+      - name: Configuring AWS
+        id: aws_info
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Render Amazon ECS task definition
+        id: render-web-container
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: .aws/task-definition.json
+          container-name: PyApp
+          image: ${{ needs.build.outputs.full_uri }}
+
+      - name: Scale down Containers
+        run: |
+          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --desired-count 0
+          sleep 1m
+
+      - name: Deploy to Amazon ECS service
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.render-web-container.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+
+      - name: Scale Up Containers
+        run: |
+          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --desired-count 1
