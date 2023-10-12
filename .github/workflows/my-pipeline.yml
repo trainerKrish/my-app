@@ -88,7 +88,7 @@ jobs:
           image: ${{ needs.build.outputs.full_uri }}
 
       - name: show td
-        run: cat .aws/task-definition.json
+        run: cat ${{ steps.render-web-container.outputs.task-definition }}
 
       - name: Deploy to Amazon ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
