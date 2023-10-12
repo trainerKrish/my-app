@@ -95,12 +95,9 @@ jobs:
           container-name: PyApp
           image: ${{ needs.build.outputs.full_uri }}
 
-      - name: show td
-        run: cat ${{ steps.render-web-container.outputs.task-definition }}
-
-      # - name: Scale down Containers
-      #   run: |
-      #     aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --desired-count 0
+      - name: Scale down Containers
+        run: |
+          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --desired-count 0
 
       - name: Deploy to Amazon ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
@@ -108,3 +105,7 @@ jobs:
           task-definition: ${{ steps.render-web-container.outputs.task-definition }}
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
+
+      - name: Scale Up Containers
+        run: |
+          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --desired-count 1
