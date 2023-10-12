@@ -79,6 +79,14 @@ jobs:
       - uses: actions/checkout@v4
         name: "Download Repo"
 
+      - name: Configuring AWS
+        id: aws_info
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
       - name: Render Amazon ECS task definition
         id: render-web-container
         uses: aws-actions/amazon-ecs-render-task-definition@v1
@@ -89,6 +97,10 @@ jobs:
 
       - name: show td
         run: cat ${{ steps.render-web-container.outputs.task-definition }}
+
+      # - name: Scale down Containers
+      #   run: |
+      #     aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --desired-count 0
 
       - name: Deploy to Amazon ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
